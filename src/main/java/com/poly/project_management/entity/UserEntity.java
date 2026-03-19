@@ -1,6 +1,5 @@
 package com.poly.project_management.entity;
 
-import com.poly.project_management.enums.Role;
 import jakarta.persistence.*;
 
 @Entity
@@ -22,7 +21,13 @@ public class UserEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "role", length = 20)
-    private Role role = Role.MEMBER;
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "user_roles",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "role_id")
+    )
+    private java.util.Set<RoleEntity> roles = new java.util.HashSet<>();
 
     public UserEntity() {}
 
@@ -39,6 +44,6 @@ public class UserEntity {
     public String getPassword() { return password; }
     public void setPassword(String password) { this.password = password; }
 
-    public Role getRole() { return role; }
-    public void setRole(Role role) { this.role = role; }
+    public java.util.Set<RoleEntity> getRoles() { return roles; }
+    public void setRoles(java.util.Set<RoleEntity> roles) { this.roles = roles; }
 }
