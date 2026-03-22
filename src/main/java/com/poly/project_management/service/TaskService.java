@@ -22,24 +22,23 @@ public class TaskService {
     public List<TaskEntity> getTasksByUserId(Long userId) { return taskRepository.findByAssigneeId(userId); }
     public List<TaskEntity> getTasksByProjectId(Long projectId) { return taskRepository.findByProjectId(projectId); }
 
-    // MỤC 3 & 4: Tạo Task & Validate projectId
-    public TaskEntity createTask(Long projectId, TaskEntity taskRequest) {
+    public TaskEntity createTask(Long projectId, TaskEntity newTask) {
         ProjectEntity project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new IllegalArgumentException("Lỗi: Không tìm thấy Dự án có ID = " + projectId));
 
-        if (taskRequest.getTitle() == null || taskRequest.getTitle().trim().isEmpty()) {
+        if (newTask.getTitle() == null || newTask.getTitle().trim().isEmpty()) {
             throw new IllegalArgumentException("Lỗi: Tên công việc không được để trống!");
         }
 
-        taskRequest.setProject(project);
-        taskRequest.setStatus(TaskStatus.TODO);
-        return taskRepository.save(taskRequest);
+        newTask.setProject(project);
+        newTask.setStatus(TaskStatus.TODO);
+        return taskRepository.save(newTask);
     }
 
-    // MỤC 5 & 6: Assign Task & Kiểm tra user có thuộc project không
     public TaskEntity assignTask(Long taskId, Long userId) {
-        TaskEntity task = taskRepository.findById(taskId)
-                .orElseThrow(() -> new IllegalArgumentException("Lỗi: Không tìm thấy Task!"));
+        // 👉 ĐÃ REFACTOR: Dùng hàm getTaskById() rút gọn code trùng lặp
+        TaskEntity task = getTaskById(taskId);
+
         UserEntity user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("Lỗi: Không tìm thấy Nhân viên!"));
 
@@ -57,10 +56,9 @@ public class TaskService {
         return taskRepository.save(task);
     }
 
-    // MỤC 7 & 8: Update Status & Chặn nếu đã DONE
     public TaskEntity updateTaskStatus(Long taskId, TaskStatus newStatus) {
-        TaskEntity task = taskRepository.findById(taskId)
-                .orElseThrow(() -> new IllegalArgumentException("Lỗi: Không tìm thấy Task!"));
+        // 👉 ĐÃ REFACTOR: Dùng hàm getTaskById() rút gọn code trùng lặp
+        TaskEntity task = getTaskById(taskId);
 
         // MỤC 8: Chặn update
         if (task.getStatus() == TaskStatus.DONE) {
@@ -69,5 +67,10 @@ public class TaskService {
 
         task.setStatus(newStatus);
         return taskRepository.save(task);
+    }
+
+    private TaskEntity getTaskById(Long taskId) {
+        return taskRepository.findById(taskId)
+                .orElseThrow(() -> new IllegalArgumentException("Lỗi: Không tìm thấy Task!"));
     }
 }
